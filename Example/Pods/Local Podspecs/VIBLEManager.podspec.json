@@ -1,0 +1,22 @@
+{
+  "name": "VIBLEManager",
+  "version": "0.1.0",
+  "summary": "A short description of VIBLEManager.",
+  "description": "TODO: Add long description of the pod here.",
+  "homepage": "https://github.com/fanliangliang441/VIBLEManager",
+  "license": {
+    "type": "MIT",
+    "file": "LICENSE"
+  },
+  "authors": {
+    "fanliangliang441": "guofengld@gmail.com"
+  },
+  "source": {
+    "git": "https://github.com/fanliangliang441/VIBLEManager.git",
+    "tag": "0.1.0"
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "source_files": "VIBLEManager/Classes/**/*"
+}

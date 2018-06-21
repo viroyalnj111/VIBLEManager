@@ -1,0 +1,6 @@
+framework module VIBLEManager {
+  umbrella header "VIBLEManager-umbrella.h"
+
+  export *
+  module * { export * }
+}
