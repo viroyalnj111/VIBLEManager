@@ -26,7 +26,7 @@ Pod::Spec.new do |s|
   s.author           = { 'guofengld' => 'guofengld@gmail.com' }
   s.source           = { :git => 'https://github.com/guofengld/VIBLEManager.git', :tag => s.version.to_s }
 
-  s.ios.deployment_target = '8.0'
+  s.ios.deployment_target = '10.0'
 
   s.source_files = 'VIBLEManager/*'
 
