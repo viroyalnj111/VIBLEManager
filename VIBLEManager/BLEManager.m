@@ -45,7 +45,6 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) CBCentralManager  *centralManager;
 @property (nonatomic, strong) NSMutableArray    *peripherals;
 @property (nonatomic, copy)   NSString          *deviceName;
-@property (nonatomic, assign) BOOL              pairing;
 
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
 @property (nonatomic, copy)   CommonBlock       sendCompletion;
@@ -132,10 +131,6 @@ typedef enum : NSUInteger {
 }
 
 - (void)sendString:(NSString *)string withCompletion:(nullable CommonBlock)completion {
-    [self sendData:[string dataUsingEncoding:NSUTF8StringEncoding] withCompletion:completion];
-}
-
-- (void)sendData:(NSData *)data withCompletion:(nullable CommonBlock)completion {
     if (self.centralManager.isScanning || !self.characteristic) {
         // 设备没有配对好，报错
         if (completion) {
@@ -143,11 +138,7 @@ typedef enum : NSUInteger {
         }
     }
     
-    self.sendCompletion = completion;
-    [self writeData:data
-         peripheral:self.characteristic.service.peripheral
-     characteristic:self.characteristic];
-    
+    [self writeString:string peripheral:self.peripherals characteristic:self.characteristic];
 }
 
 #pragma mark - CBCentralManagerDelegate
@@ -169,9 +160,8 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSString *name = peripheral.name;
     
-    if ([name containsString:@"Nexus"] || [name containsString:@"Q10"]) {
+    if ([name containsString:@"Q11"]) {
         NSLog(@"name: %@ advertisementData: %@", peripheral.name, advertisementData);
-        
         [self.peripherals addObject:peripheral];
         
         // 连接之前，先终止扫描
@@ -215,20 +205,27 @@ typedef enum : NSUInteger {
     for (CBCharacteristic *item in service.characteristics) {
         NSLog(@"characteristic: %@", item.UUID);
         if (item.properties & CBCharacteristicPropertyWrite || item.properties & CBCharacteristicPropertyWriteWithoutResponse) {
-            [self writeData:[@"hello" dataUsingEncoding:NSUTF8StringEncoding]
-                 peripheral:peripheral
-             characteristic:item];
+            [self writeString:@"ATQ+FMFREQ=967"
+                   peripheral:peripheral
+               characteristic:item];
             
-            [peripheral setNotifyValue:YES forCharacteristic:item];
+            // 这时候就认为是连接上了，不做其它判断
+            self.peripherals = peripheral;
+            self.characteristic = item;
             
-            self.pairing = YES;
+            [self.delegate bleManager:self devicePaired:peripheral.name];
+            
+            // 此时，才能接受指令
+            self.arrCommand = [NSMutableArray new];
+            
+            break;
         }
     }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     NSString *value = [[NSString alloc] initWithData:characteristic.value encoding:NSUTF8StringEncoding];
-    NSLog(@"didUpdateValueForCharacteristic: %@ value: %@", characteristic.UUID, value);
+    NSLog(@"BLE >> %@", value);
     BTCommand *cmd = self.arrCommand.firstObject;
     if (cmd && cmd.state == BtCmdStateSent) {
         // 目前有正在处理中的命令
@@ -241,29 +238,19 @@ typedef enum : NSUInteger {
         return;
     }
     
-    if (self.pairing) {
-        if ([value isEqualToString:@"hellohello>"]) {
-            self.characteristic = characteristic;
-            self.deviceName = peripheral.name;
-            
-            [self.centralManager stopScan];
-            [self.delegate bleManager:self devicePaired:peripheral.name];
-            
-            // 此时，才能接受指令
-            self.arrCommand = [NSMutableArray new];
-            return;
-        }
-    }
-    
-    if ([value caseInsensitiveCompare:@"hello"] == NSOrderedSame) {
-        [self writeData:[@"hellohello" dataUsingEncoding:NSUTF8StringEncoding]
-             peripheral:peripheral
-         characteristic:characteristic];
-    }
-    
     if ([self.delegate respondsToSelector:@selector(bleManager:dataReceived:)]) {
         [self.delegate bleManager:self dataReceived:characteristic.value];
     }
+}
+
+- (void)writeString:(NSString *)string
+         peripheral:(CBPeripheral *)peripheral
+     characteristic:(CBCharacteristic *)characteristic {
+    
+    NSLog(@"BLE << %@", string);
+    [self writeData:[string dataUsingEncoding:NSUTF8StringEncoding]
+         peripheral:peripheral
+     characteristic:characteristic];
 }
 
 - (void)writeData:(NSData *)data
@@ -272,6 +259,8 @@ typedef enum : NSUInteger {
     [peripheral writeValue:data
          forCharacteristic:characteristic
                       type:CBCharacteristicWriteWithResponse];
+    
+    [peripheral setNotifyValue:YES forCharacteristic:characteristic];
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
