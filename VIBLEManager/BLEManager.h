@@ -43,7 +43,7 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 + (instancetype)manager;
 
 /*
- * 向蓝牙设备发送指令，所有的指令会按照先后顺序，逐条发送，指令处理完成后，会调用`completion'
+ * 向蓝牙设备发送指令，所有的指令会按照先后顺序，逐条发送，指令处理完成后，会调用 completion
  @param string 指令内容，非空
  @completion 完成回调
  */
