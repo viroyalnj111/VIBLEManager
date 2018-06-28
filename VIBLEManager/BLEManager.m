@@ -8,10 +8,10 @@
 #import "BLEManager.h"
 
 typedef enum : NSUInteger {
-    BtCmdStateInit,
-    BtCmdStateSent,
-    BtCmdStateFinished,
-    BtCmdStateFailed
+    BtCmdStateInit,         // 初始状态
+    BtCmdStateSent,         // 已经发送
+    BtCmdStateEcho,         // 收到回应
+    BtCmdStateFinished      // 处理完毕
 } BtCmdState;
 
 @interface BTCommand : NSObject
@@ -47,6 +47,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) BOOL              connected;
 @property (nonatomic, copy)   NSString          *deviceName;
 
+@property (nonatomic, strong) CBPeripheral      *peripheral;
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
 @property (nonatomic, copy)   CommonBlock       sendCompletion;
 @property (nonatomic, strong) NSMutableArray    *arrCommand;
@@ -103,46 +104,28 @@ typedef enum : NSUInteger {
     BTCommand *cmd = [BTCommand commandWithString:string completion:completion];
     [self.arrCommand addObject:cmd];
     
+    [self nextCommand];
 }
 
 - (void)nextCommand {
     BTCommand *cmd = self.arrCommand.firstObject;
-    if (cmd.state == BtCmdStateInit) {
-        [self sendString:cmd.cmdString
-          withCompletion:^(BOOL success, NSDictionary * _Nullable info) {
-              if (success) {
-                  // 发送成功
-                  cmd.state = BtCmdStateSent;
-              }
-              else {
-                  // 发送失败
-                  cmd.state = BtCmdStateFailed;
-                  if (cmd.completion) {
-                      cmd.completion(NO, nil);
-                  }
-              }
-          }];
-    }
-    else if (cmd.state == BtCmdStateSent) {
-        
-    }
-    else if (cmd.state == BtCmdStateFinished) {
-        [self.arrCommand removeObjectAtIndex:0];
-    }
-    else {
-        NSAssert(NO, @"unhandled case");
+    if (cmd) {
+        if (cmd.state == BtCmdStateInit) {
+            [self sendString:cmd.cmdString];
+            cmd.state = BtCmdStateSent;
+        }
+        else if (cmd.state == BtCmdStateFinished) {
+            [self.arrCommand removeObjectAtIndex:0];
+            
+            [self nextCommand];
+        }
     }
 }
 
-- (void)sendString:(NSString *)string withCompletion:(nullable CommonBlock)completion {
-    if (!self.connected) {
-        // 设备没有配对好，报错
-        if (completion) {
-            completion(NO, nil);
-        }
-    }
-    
-    [self writeString:string peripheral:self.peripherals characteristic:self.characteristic];
+- (void)sendString:(NSString *)string {
+    [self writeString:string
+           peripheral:self.peripheral
+       characteristic:self.characteristic];
 }
 
 #pragma mark - CBCentralManagerDelegate
@@ -164,8 +147,10 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSString *name = peripheral.name;
     
-    if ([name containsString:@"Q11"]) {
-        NSLog(@"name: %@ advertisementData: %@", peripheral.name, advertisementData);
+    if ([self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)] &&
+        [self.delegate bleManager:self shouldPairDeviceWithName:name]) {
+        
+        NSLog(@"BLE name: %@ advertisementData: %@", peripheral.name, advertisementData);
         [self.peripherals addObject:peripheral];
         
         // 连接之前，先终止扫描
@@ -177,23 +162,27 @@ typedef enum : NSUInteger {
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     [self.delegate bleManagerDeviceSearchDidFailed:self];
+    
+    [self.centralManager scanForPeripheralsWithServices:nil options:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
-    NSLog(@"didConnectPeripheral: %@", peripheral.name);
+    NSLog(@"BLE didConnectPeripheral: %@", peripheral.name);
     
     peripheral.delegate = self;
     [peripheral discoverServices:nil];
 }
 
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
-    NSLog(@"didDisconnectPeripheral: %@", peripheral.name);
+    NSLog(@"BLE didDisconnectPeripheral: %@", peripheral.name);
     
     self.connected = NO;
     self.deviceName = nil;
     self.peripherals = nil;
     
     [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
+    
+    [self.centralManager scanForPeripheralsWithServices:nil options:nil];
 }
 
 #pragma mark - CBPeripheralDelegate
@@ -204,29 +193,23 @@ typedef enum : NSUInteger {
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverServices:(NSError *)error {
     for (CBService *item in peripheral.services) {
-        NSLog(@"didDiscoverServices: %@", item.UUID);
+        NSLog(@"BLE didDiscoverServices: %@", item.UUID);
         [peripheral discoverCharacteristics:nil forService:item];
     }
 }
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
     for (CBCharacteristic *item in service.characteristics) {
-        NSLog(@"characteristic: %@", item.UUID);
+        NSLog(@"BLE didDiscoverCharacteristic: %@", item.UUID);
         if (item.properties & CBCharacteristicPropertyWrite || item.properties & CBCharacteristicPropertyWriteWithoutResponse) {
-            [self writeString:@"ATQ+FMFREQ=964"
-                   peripheral:peripheral
-               characteristic:item];
-            
             // 这时候就认为是连接上了，不做其它判断
             self.connected = YES;
             self.deviceName = peripheral.name;
-            self.peripherals = peripheral;
+            self.peripheral = peripheral;
             self.characteristic = item;
+            self.arrCommand = [NSMutableArray new];
             
             [self.delegate bleManager:self devicePaired:peripheral.name];
-            
-            // 此时，才能接受指令
-            self.arrCommand = [NSMutableArray new];
             
             break;
         }
@@ -235,22 +218,64 @@ typedef enum : NSUInteger {
 
 - (void)peripheral:(CBPeripheral *)peripheral didUpdateValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
     NSString *value = [[NSString alloc] initWithData:characteristic.value encoding:NSUTF8StringEncoding];
-    NSLog(@"BLE >> %@", value);
-    BTCommand *cmd = self.arrCommand.firstObject;
-    if (cmd && cmd.state == BtCmdStateSent) {
-        // 目前有正在处理中的命令
-        cmd.state = BtCmdStateFinished;
-        if (cmd.completion) {
-            cmd.completion(YES, @{@"response" : value});
+    value = [value stringByReplacingOccurrencesOfString:@"\r\n" withString:@" "];
+    
+    NSArray *arr = [value componentsSeparatedByString:@" "];
+    for (NSString *item in arr) {
+        if (item.length == 0) {
+            continue;
         }
         
-        [self nextCommand];
-        return;
+        NSLog(@"BLE >> %@", item);
+        BOOL processed = NO;
+        for (BTCommand *cmd in self.arrCommand) {
+            switch (cmd.state) {
+                case BtCmdStateInit: {
+                    
+                }
+                break;
+                
+                case BtCmdStateSent: {
+                    /*
+                     * 下发指令是这样 AT+FMFREQ=969
+                     * 收到回应是这样 +FMFREQ:969
+                     * 此处需要将两者匹配
+                     */
+                    
+                    NSString *tmp = [item stringByReplacingOccurrencesOfString:@":" withString:@"="];
+                    tmp = [@"AT" stringByAppendingString:tmp];
+                    if ([cmd.cmdString isEqualToString:tmp]) {
+                        cmd.state = BtCmdStateEcho;
+                        processed = YES;
+                    }
+                }
+                
+                break;
+                
+                case BtCmdStateEcho: {
+                    if ([item isEqualToString:@"OK"]) {
+                        cmd.state = BtCmdStateFinished;
+                        if (cmd.completion) {
+                            cmd.completion(YES, @{@"response" : item});
+                        }
+                        
+                        processed = YES;
+                    }
+                }
+                
+                break;
+                
+                default:
+                break;
+            }
+            
+            if (processed) {
+                break;
+            }
+        }
     }
     
-    if ([self.delegate respondsToSelector:@selector(bleManager:dataReceived:)]) {
-        [self.delegate bleManager:self dataReceived:characteristic.value];
-    }
+    [self nextCommand];
 }
 
 - (void)writeString:(NSString *)string
