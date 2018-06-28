@@ -1,6 +1,0 @@
-use_frameworks!
-target 'VIBLEManager_Tests' do
-  pod 'VIBLEManager', :path => '../'
-  
-  
-end
