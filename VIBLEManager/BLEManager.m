@@ -44,6 +44,7 @@ typedef enum : NSUInteger {
 
 @property (nonatomic, strong) CBCentralManager  *centralManager;
 @property (nonatomic, strong) NSMutableArray    *peripherals;
+@property (nonatomic, assign) BOOL              connected;
 @property (nonatomic, copy)   NSString          *deviceName;
 
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
@@ -83,12 +84,15 @@ typedef enum : NSUInteger {
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     if ([keyPath isEqualToString:@"isScanning"]) {
+        self.connected = NO;
+        self.deviceName = nil;
+        
         [self.delegate bleManager:self scaningDidChange:self.centralManager.isScanning];
     }
 }
 
 - (void)sendCommand:(NSString *)string withCompletion:(CommonBlock)completion {
-    if (!self.characteristic) {
+    if (!self.connected) {
         if (completion) {
             completion(NO, nil);
         }
@@ -131,7 +135,7 @@ typedef enum : NSUInteger {
 }
 
 - (void)sendString:(NSString *)string withCompletion:(nullable CommonBlock)completion {
-    if (self.centralManager.isScanning || !self.characteristic) {
+    if (!self.connected) {
         // 设备没有配对好，报错
         if (completion) {
             completion(NO, nil);
@@ -185,6 +189,10 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     NSLog(@"didDisconnectPeripheral: %@", peripheral.name);
     
+    self.connected = NO;
+    self.deviceName = nil;
+    self.peripherals = nil;
+    
     [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
 }
 
@@ -205,11 +213,13 @@ typedef enum : NSUInteger {
     for (CBCharacteristic *item in service.characteristics) {
         NSLog(@"characteristic: %@", item.UUID);
         if (item.properties & CBCharacteristicPropertyWrite || item.properties & CBCharacteristicPropertyWriteWithoutResponse) {
-            [self writeString:@"ATQ+FMFREQ=967"
+            [self writeString:@"ATQ+FMFREQ=964"
                    peripheral:peripheral
                characteristic:item];
             
             // 这时候就认为是连接上了，不做其它判断
+            self.connected = YES;
+            self.deviceName = peripheral.name;
             self.peripherals = peripheral;
             self.characteristic = item;
             

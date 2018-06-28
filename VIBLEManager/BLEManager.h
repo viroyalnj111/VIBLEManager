@@ -31,8 +31,8 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 
 @interface BLEManager : NSObject
 
-@property (nonatomic, weak) id<BLEManagerDelegate>   delegate;
-@property (nonatomic, readonly, getter=isPairing) BOOL                pairing;
+@property (nonatomic, weak) id<BLEManagerDelegate>  delegate;
+@property (nonatomic, readonly) BOOL                connected;
 @property (nonatomic, readonly) NSString            *deviceName;
 
 + (instancetype)manager;
