@@ -66,5 +66,5 @@ manager.delegate = self;
 
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+[MIT](./LICENSE)
 
