@@ -244,6 +244,9 @@
 				LastUpgradeCheck = 0940;
 				ORGANIZATIONNAME = fanliangliang441;
 				TargetAttributes = {
+					6003F589195388D20070C39A = {
+						DevelopmentTeam = N7F69UBB9A;
+					};
 					6003F5AD195388D20070C39A = {
 						TestTargetID = 6003F589195388D20070C39A;
 					};
@@ -509,7 +512,7 @@
 			baseConfigurationReference = D8A7C5630970C68A2B8D1FA3 /* Pods-VIBLEManager_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = N7F69UBB9A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VIBLEManager/VIBLEManager-Prefix.pch";
 				INFOPLIST_FILE = "VIBLEManager/VIBLEManager-Info.plist";
@@ -526,7 +529,7 @@
 			baseConfigurationReference = 93F487D7B7E4F05FF3872F25 /* Pods-VIBLEManager_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = N7F69UBB9A;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "VIBLEManager/VIBLEManager-Prefix.pch";
 				INFOPLIST_FILE = "VIBLEManager/VIBLEManager-Info.plist";

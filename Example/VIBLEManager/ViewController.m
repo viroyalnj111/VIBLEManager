@@ -69,7 +69,7 @@
                                                           target:self
                                                           action:@selector(bleSetFM)];
     
-    UIBarButtonItem *acceptCall = [[UIBarButtonItem alloc] initWithTitle:@"接听来点"
+    UIBarButtonItem *acceptCall = [[UIBarButtonItem alloc] initWithTitle:@"接听来电"
                                                                    style:UIBarButtonItemStyleDone
                                                                   target:self
                                                                   action:@selector(acceptCall)];
@@ -112,7 +112,12 @@
 
 - (void)acceptCall {
     [[BLEManager manager] answerCallWithCompletion:^(BOOL success, NSDictionary * _Nullable info) {
-        [self logMessage:[NSString stringWithFormat:@"接听电话: %@", success?@"成功":@"失败"]];
+        if (success) {
+            [self logMessage:@"接听来电: 成功"];
+        }
+        else {
+            [self logMessage:[NSString stringWithFormat:@"接听来电: %@", info[@"error_msg"]]];
+        }
     }];
 }
 
@@ -167,10 +172,11 @@
 }
 
 - (void)bleManager:(BLEManager *)manager scaningDidChange:(BOOL)scaning {
-    
+    [self logMessage:scaning?@"开始扫描设备":@"停止扫描设备"];
 }
 
 - (BOOL)bleManager:(BLEManager *)manager shouldPairDeviceWithName:(NSString *)name {
+    [self logMessage:[NSString stringWithFormat:@"扫描到设备 %@", name]];
     if ([name isEqualToString:@"Q11"]) {
         return YES;
     }
@@ -179,15 +185,15 @@
 }
 
 - (void)bleManager:(BLEManager *)manager devicePaired:(NSString *)name {
-    
+    [self logMessage:[NSString stringWithFormat:@"设备 %@ 配对成功", name]];
 }
 
 - (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager {
-    
+    [self logMessage:@"扫描失败"];
 }
 
 - (void)bleManager:(BLEManager *)manager deviceDidDisconnected:(NSString *)name {
-    
+    [self logMessage:@"设备断开连接"];
 }
 
 #pragma mark - UITableViewDataSource, UITableViewDelegate

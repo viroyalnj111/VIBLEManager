@@ -14,6 +14,46 @@ pod 'VIBLEManager', :git => 'https://github.com/guofengld/VIBLEManager.git'
 或者下载 [源代码](https://github.com/guofengld/VIBLEManager/tree/master/VIBLEManager)，手动添加
 到工程中便可，别忘了在工程文件中 link CoreBluetooth.framework
 
+## Demo
+clone 整个 repo，并且安装相关依赖 
+
+```bash
+git@github.com:viroyalnj/VIBLEManager.git
+
+cd VIBLEManager/Example/
+pod install
+```
+
+安装完成之后，启动工程 
+
+```bash
+open VIBLEManager.xcworkspace/
+```
+
+此 Demo 可以在真机上运行，搭配远御支架设备，可以获得以下界面效果
+
+![](./demo.png)
+
+对应地，有如下日志输出
+
+```
+BLE name: Q11 advertisementData: {
+    kCBAdvDataIsConnectable = 1;
+    kCBAdvDataLocalName = Q11;
+    kCBAdvDataServiceUUIDs =     (
+        FF10
+    );
+}
+
+BLE didConnectPeripheral: Q11
+BLE didDiscoverServices: FF10
+BLE didDiscoverCharacteristic: FFF1
+BLE << AT+FMFREQ=933
+BLE >> +FMFREQ:933
+BLE >> OK
+```
+
+
 ## 使用
 
 ### 初始化
@@ -60,7 +100,7 @@ manager.delegate = self;
  * 便捷设置电台频率
  */
 
-- (void)setRadioFrequency:(CGFloat)frequency
+- (void)setRadioFrequency:(NSInteger)frequency
            withCompletion:(nullable CommonBlock)completion;
 
 ```
@@ -93,7 +133,6 @@ Q11作为GATT server端，通过特定的SERVICE UUID: ```0000ff10-0000-1000-800
 指令：```AT+WAKEUP```<br/>
 描述：Q11的PSERSOR唤醒后，上报给APP的指令，提示Q11已唤醒。<br/>
 回复：```+WAKEUP\r\nOK\r\n```
-
 
 ## 贡献
 

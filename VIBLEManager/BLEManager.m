@@ -128,9 +128,9 @@ typedef enum : NSUInteger {
        characteristic:self.characteristic];
 }
 
-- (void)setRadioFrequency:(CGFloat)frequency
+- (void)setRadioFrequency:(NSInteger)frequency
            withCompletion:(nullable CommonBlock)completion {
-    NSString *string = [NSString stringWithFormat:@"AT+FMFREQ=%d", frequency * 10];
+    NSString *string = [NSString stringWithFormat:@"AT+FMFREQ=%d", frequency];
     [self sendCommand:string
        withCompletion:completion];
 }
@@ -164,7 +164,7 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSString *name = peripheral.name;
     
-    if ([self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)] &&
+    if ([name length] > 0 && [self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)] &&
         [self.delegate bleManager:self shouldPairDeviceWithName:name]) {
         
         NSLog(@"BLE name: %@ advertisementData: %@", peripheral.name, advertisementData);
