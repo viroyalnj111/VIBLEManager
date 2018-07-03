@@ -21,10 +21,10 @@ Pod::Spec.new do |s|
 包含蓝牙设备的配对、指令下发
                        DESC
 
-  s.homepage         = 'https://github.com/guofengld/VIBLEManager'
+  s.homepage         = 'https://github.com/viroyalnj/VIBLEManager'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'guofengld' => 'guofengld@gmail.com' }
-  s.source           = { :git => 'https://github.com/guofengld/VIBLEManager.git', :tag => s.version.to_s }
+  s.source           = { :git => 'https://github.com/viroyalnj/VIBLEManager.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '10.0'
 

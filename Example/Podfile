@@ -1,0 +1,14 @@
+platform :ios, '10.1'
+inhibit_all_warnings!
+use_frameworks!
+
+target 'VIBLEManager_Example' do
+  pod 'Masonry'
+  pod 'VIBLEManager', :path => '../'
+
+  target 'VIBLEManager_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

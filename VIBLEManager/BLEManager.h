@@ -51,10 +51,22 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
      withCompletion:(nullable CommonBlock)completion;
 
 /*
- * 便捷设置电台频率
+ * 设置电台频率
  */
 
 - (void)setRadioFrequency:(CGFloat)frequency
            withCompletion:(nullable CommonBlock)completion;
+
+/*
+ * 接听电话
+ */
+
+- (void)answerCallWithCompletion:(nullable CommonBlock)completion;
+
+/*
+ * 挂断电话
+ */
+
+- (void)rejectCallWithCompletion:(nullable CommonBlock)completion;
 
 @end

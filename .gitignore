@@ -1,5 +1,7 @@
 # OS X
 .DS_Store
+Example/Podfile.lock
+Example/Pods
 
 # Xcode
 build/

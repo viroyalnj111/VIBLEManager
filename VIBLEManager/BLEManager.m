@@ -135,6 +135,16 @@ typedef enum : NSUInteger {
        withCompletion:completion];
 }
 
+- (void)answerCallWithCompletion:(nullable CommonBlock)completion {
+    [self sendCommand:@"AT+CALLANSW"
+       withCompletion:completion];
+}
+
+- (void)rejectCallWithCompletion:(nullable CommonBlock)completion {
+    [self sendCommand:@"AT+CALLEND"
+       withCompletion:completion];
+}
+
 #pragma mark - CBCentralManagerDelegate
 
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
