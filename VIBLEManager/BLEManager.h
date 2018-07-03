@@ -54,7 +54,7 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
  * 设置电台频率
  */
 
-- (void)setRadioFrequency:(NSInteger)frequency
+- (void)setRadioFrequency:(CGFloat)frequency
            withCompletion:(nullable CommonBlock)completion;
 
 /*

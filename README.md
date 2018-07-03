@@ -100,7 +100,7 @@ manager.delegate = self;
  * 便捷设置电台频率
  */
 
-- (void)setRadioFrequency:(NSInteger)frequency
+- (void)setRadioFrequency:(CGFloat)frequency
            withCompletion:(nullable CommonBlock)completion;
 
 ```

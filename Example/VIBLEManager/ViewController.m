@@ -99,7 +99,7 @@
 }
 
 - (void)bleSetFM {
-    [[BLEManager manager] setRadioFrequency:933
+    [[BLEManager manager] setRadioFrequency:93.3
                              withCompletion:^(BOOL success, NSDictionary * _Nullable info) {
                                  if (success) {
                                      [self logMessage:@"设置调频: 成功"];

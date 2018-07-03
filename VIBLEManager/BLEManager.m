@@ -128,9 +128,9 @@ typedef enum : NSUInteger {
        characteristic:self.characteristic];
 }
 
-- (void)setRadioFrequency:(NSInteger)frequency
+- (void)setRadioFrequency:(CGFloat)frequency
            withCompletion:(nullable CommonBlock)completion {
-    NSString *string = [NSString stringWithFormat:@"AT+FMFREQ=%d", frequency];
+    NSString *string = [NSString stringWithFormat:@"AT+FMFREQ=%.0f", frequency * 10];
     [self sendCommand:string
        withCompletion:completion];
 }
