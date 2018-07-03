@@ -184,8 +184,12 @@
     return NO;
 }
 
-- (void)bleManager:(BLEManager *)manager devicePaired:(NSString *)name {
-    [self logMessage:[NSString stringWithFormat:@"设备 %@ 配对成功", name]];
+- (void)bleManager:(BLEManager *)manager startToConnectToDevice:(NSString *)name {
+    [self logMessage:[NSString stringWithFormat:@"开始连接设备 %@", name]];
+}
+
+- (void)bleManager:(BLEManager *)manager didConnectedToDevice:(NSString *)name {
+    [self logMessage:[NSString stringWithFormat:@"设备 %@ 连接成功", name]];
 }
 
 - (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager {

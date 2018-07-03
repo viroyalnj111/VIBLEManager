@@ -172,8 +172,9 @@ typedef enum : NSUInteger {
         
         // 连接之前，先终止扫描
         [central stopScan];
-        
         [central connectPeripheral:peripheral options:nil];
+        
+        [self.delegate bleManager:self startToConnectToDevice:peripheral.name];
     }
 }
 
@@ -226,7 +227,7 @@ typedef enum : NSUInteger {
             self.characteristic = item;
             self.arrCommand = [NSMutableArray new];
             
-            [self.delegate bleManager:self devicePaired:peripheral.name];
+            [self.delegate bleManager:self didConnectedToDevice:peripheral.name];
             
             break;
         }

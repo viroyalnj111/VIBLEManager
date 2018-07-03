@@ -22,8 +22,11 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 // 是否配对扫描到的这个设备
 - (BOOL)bleManager:(BLEManager *)manager shouldPairDeviceWithName:(NSString *)name;
 
-// 设备配对成功
-- (void)bleManager:(BLEManager *)manager devicePaired:(NSString *)name;
+// 开始连接设备
+- (void)bleManager:(BLEManager *)manager startToConnectToDevice:(NSString *)name;
+
+// 设备连接成功
+- (void)bleManager:(BLEManager *)manager didConnectedToDevice:(NSString *)name;
 
 // 蓝牙扫描失败
 - (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager;
