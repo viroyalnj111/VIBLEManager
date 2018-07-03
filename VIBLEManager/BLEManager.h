@@ -50,4 +50,11 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 - (void)sendCommand:(NSString *)string
      withCompletion:(nullable CommonBlock)completion;
 
+/*
+ * 便捷设置电台频率
+ */
+
+- (void)setRadioFrequency:(CGFloat)frequency
+           withCompletion:(nullable CommonBlock)completion;
+
 @end

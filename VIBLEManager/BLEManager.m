@@ -95,7 +95,7 @@ typedef enum : NSUInteger {
 - (void)sendCommand:(NSString *)string withCompletion:(CommonBlock)completion {
     if (!self.connected) {
         if (completion) {
-            completion(NO, nil);
+            completion(NO, @{@"error_msg" : @"蓝牙连接已断开"});
         }
         
         return;
@@ -126,6 +126,13 @@ typedef enum : NSUInteger {
     [self writeString:string
            peripheral:self.peripheral
        characteristic:self.characteristic];
+}
+
+- (void)setRadioFrequency:(CGFloat)frequency
+           withCompletion:(nullable CommonBlock)completion {
+    NSString *string = [NSString stringWithFormat:@"AT+FMFREQ=%d", frequency * 10];
+    [self sendCommand:string
+       withCompletion:completion];
 }
 
 #pragma mark - CBCentralManagerDelegate
