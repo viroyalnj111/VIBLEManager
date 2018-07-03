@@ -14,11 +14,11 @@ pod 'VIBLEManager', :git => 'https://github.com/guofengld/VIBLEManager.git'
 或者下载 [源代码](https://github.com/guofengld/VIBLEManager/tree/master/VIBLEManager)，手动添加
 到工程中便可，别忘了在工程文件中 link CoreBluetooth.framework
 
-## Demo
+## 示例
 clone 整个 repo，并且安装相关依赖 
 
 ```bash
-git@github.com:viroyalnj/VIBLEManager.git
+git clone git@github.com:viroyalnj/VIBLEManager.git
 
 cd VIBLEManager/Example/
 pod install
