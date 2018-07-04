@@ -34,6 +34,9 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 // 蓝牙设备断开连接
 - (void)bleManager:(BLEManager *)manager deviceDidDisconnected:(NSString *)name;
 
+// 唤醒语音助手
+- (void)bleManagerDeviceDidWakeup:(BLEManager *)manager;
+
 @end
 
 @interface BLEManager : NSObject

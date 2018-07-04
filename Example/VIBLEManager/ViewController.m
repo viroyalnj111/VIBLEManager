@@ -200,6 +200,10 @@
     [self logMessage:@"设备断开连接"];
 }
 
+- (void)bleManagerDeviceDidWakeup:(BLEManager *)manager {
+    [self logMessage:@"语音唤醒"];
+}
+
 #pragma mark - UITableViewDataSource, UITableViewDelegate
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {

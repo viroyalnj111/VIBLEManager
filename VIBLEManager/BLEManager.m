@@ -227,6 +227,7 @@ typedef enum : NSUInteger {
             self.characteristic = item;
             self.arrCommand = [NSMutableArray new];
             
+            [peripheral setNotifyValue:YES forCharacteristic:item];
             [self.delegate bleManager:self didConnectedToDevice:peripheral.name];
             
             break;
@@ -289,6 +290,15 @@ typedef enum : NSUInteger {
             
             if (processed) {
                 break;
+            }
+        }
+        
+        if (!processed) {
+            // 没有处理，可能是主动上报的命令
+            if ([item containsString:@"AT+WAKEUP"]) {
+                [self sendString:@"AT+WAKEUP\r\nOK\r\n"];
+                
+                [self.delegate bleManagerDeviceDidWakeup:self];
             }
         }
     }
