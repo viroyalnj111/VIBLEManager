@@ -177,7 +177,7 @@
 
 - (BOOL)bleManager:(BLEManager *)manager shouldPairDeviceWithName:(NSString *)name {
     [self logMessage:[NSString stringWithFormat:@"扫描到设备 %@", name]];
-    if ([name isEqualToString:@"Q11"]) {
+    if ([name isEqualToString:@"Yujia_Ble"]) {
         return YES;
     }
     

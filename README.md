@@ -97,42 +97,65 @@ manager.delegate = self;
      withCompletion:(nullable CommonBlock)completion;
 
 /*
- * 便捷设置电台频率
+ * 设置电台频率
  */
 
 - (void)setRadioFrequency:(CGFloat)frequency
            withCompletion:(nullable CommonBlock)completion;
 
+/*
+ * 接听电话
+ */
+
+- (void)answerCallWithCompletion:(nullable CommonBlock)completion;
+
+/*
+ * 挂断电话
+ */
+
+- (void)rejectCallWithCompletion:(nullable CommonBlock)completion;
+
+/*
+ * 拨打电话
+ */
+
+- (void)makeCall:(NSString *)number
+      completion:(nullable CommonBlock)completion;
 ```
 ## AT 指令集
 ### 说明
-本节描述蓝牙设备（Q11）与御驾助手 app 基于蓝牙BLE协议的通信机制。<br/>
+本节描述蓝牙设备（Q11）与御驾助手 app 基于蓝牙BLE协议的通信机制。  
 Q11作为GATT server端，通过特定的SERVICE UUID: ```0000ff10-0000-1000-8000-00805f9b34fb```获取service，通过Characteristic UUID: ```0000fff1-0000-1000-8000-00805f9b34fb``` 进行数据读写以及notify 操作。
 ### 指令
 按照标准AT指令制定，回复是Q11接收到APP指令后发送给APP的返回值或者APP发送给Q11的返回值，确认通信正常。 
 
-* 识别语音设备 <br/>
+* 识别语音设备   
 设备开机会有两种蓝牙设备，一种是 **BLE** 设备，通过特定的SERVICE UUID和名称Q11进行连接，一种是蓝牙耳机设备，名称 **Q11**，正常连接即可。
 
-* FM发射 <br/>
-指令：```AT+FMFREQ=设置频率``` <br/>
-描述：app 下发给Q11设置FM发射频率的指令。设置的频率=实际频率X10，例如 ```AT+FMFREQ=1016```，实际频率是101.6。<br/>
+* FM发射   
+指令：```AT+FMFREQ=设置频率```   
+描述：app 下发给Q11设置FM发射频率的指令。设置的频率=实际频率X10，例如 ```AT+FMFREQ=1016```，实际频率是101.6。  
 回复: ```+FMFREQ：101.6\r\nOK\r\n```
 
 * 接听电话 
-指令：```AT+CALLANSW```<br/>
-描述：APP下发给Q11用于接听电话。<br/>
+指令：```AT+CALLANSW```  
+描述：APP下发给Q11用于接听电话。  
 回复：```+CALLANSW\r\nOK\r\n```
 
-* 挂断电话 <br/>
-指令：```AT+CALLEND``` <br/>
-描述：APP下发用于挂断当前通话。<br/>
+* 挂断电话   
+指令：```AT+CALLEND```   
+描述：APP下发用于挂断当前通话。  
 回复: ```+CALLEND\r\nOK\r\n```
 
-* 唤醒 <br/>
-指令：```AT+WAKEUP```<br/>
-描述：Q11的PSERSOR唤醒后，上报给APP的指令，提示Q11已唤醒。<br/>
+* 唤醒  
+指令：```AT+WAKEUP```  
+描述：Q11的PSERSOR唤醒后，上报给APP的指令，提示Q11已唤醒。  
 回复：```+WAKEUP\r\nOK\r\n```
+
+* 打电话  
+指令：```AT+DIAL=号码```  
+描述：APP下发给小飞鱼用于拨打电话。  
+回复：```+DIAL:号码\r\nOK\r\n```  
 
 ## 贡献
 

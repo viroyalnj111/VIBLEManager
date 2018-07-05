@@ -78,6 +78,11 @@ typedef enum : NSUInteger {
                               forKeyPath:@"isScanning"
                                  options:NSKeyValueObservingOptionNew
                                  context:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(applicationDidBecomeActive:)
+                                                     name:UIApplicationDidBecomeActiveNotification
+                                                   object:nil];
     }
     
     return self;
@@ -89,6 +94,14 @@ typedef enum : NSUInteger {
         self.deviceName = nil;
         
         [self.delegate bleManager:self scaningDidChange:self.centralManager.isScanning];
+    }
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)noti {
+    CBCentralManager *centralManager = self.centralManager;
+    if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning) {
+        [centralManager scanForPeripheralsWithServices:nil
+                                               options:nil];
     }
 }
 
@@ -143,6 +156,12 @@ typedef enum : NSUInteger {
 - (void)rejectCallWithCompletion:(nullable CommonBlock)completion {
     [self sendCommand:@"AT+CALLEND"
        withCompletion:completion];
+}
+
+- (void)makeCall:(NSString *)number
+      completion:(nullable CommonBlock)completion {
+    [self sendCommand:[NSString stringWithFormat:@"AT+DIAL=%@", number]
+    withCompletion:completion];
 }
 
 #pragma mark - CBCentralManagerDelegate

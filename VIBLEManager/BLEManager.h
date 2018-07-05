@@ -75,4 +75,11 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 
 - (void)rejectCallWithCompletion:(nullable CommonBlock)completion;
 
+/*
+ * 拨打电话
+ */
+
+- (void)makeCall:(NSString *)number
+      completion:(nullable CommonBlock)completion;
+
 @end
