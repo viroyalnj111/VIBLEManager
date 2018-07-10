@@ -47,7 +47,6 @@ typedef enum : NSUInteger {
 
 @property (nonatomic, strong) CBPeripheral      *peripheral;
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
-@property (nonatomic, copy)   CommonBlock       sendCompletion;
 @property (nonatomic, strong) NSMutableArray    *arrCommand;
 
 @end
@@ -347,12 +346,6 @@ typedef enum : NSUInteger {
                       type:CBCharacteristicWriteWithResponse];
     
     [peripheral setNotifyValue:YES forCharacteristic:characteristic];
-}
-
-- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
-    if (self.sendCompletion) {
-        self.sendCompletion(error == nil, nil);
-    }
 }
 
 @end
