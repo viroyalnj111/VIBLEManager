@@ -8,10 +8,10 @@ VIBLEManager 是一个独立的模块，依赖于 CoreBluetooth，可以通过 [
 只需要在 Podfile 中增加如下代码
 
 ```ruby
-pod 'VIBLEManager', :git => 'https://github.com/guofengld/VIBLEManager.git'
+pod 'VIBLEManager', :git => 'https://github.com/viroyalnj/VIBLEManager.git'
 ```
 
-或者下载 [源代码](https://github.com/guofengld/VIBLEManager/tree/master/VIBLEManager)，手动添加
+或者下载 [源代码](https://github.com/viroyalnj/VIBLEManager/tree/master/VIBLEManager)，手动添加
 到工程中便可，别忘了在工程文件中 link CoreBluetooth.framework
 
 ## 示例
@@ -75,8 +75,11 @@ manager.delegate = self;
 // 是否配对扫描到的这个设备
 - (BOOL)bleManager:(BLEManager *)manager shouldPairDeviceWithName:(NSString *)name;
 
-// 设备配对成功
-- (void)bleManager:(BLEManager *)manager devicePaired:(NSString *)name;
+// 开始连接设备
+- (void)bleManager:(BLEManager *)manager startToConnectToDevice:(NSString *)name;
+
+// 设备连接成功
+- (void)bleManager:(BLEManager *)manager didConnectedToDevice:(NSString *)name;
 
 // 蓝牙扫描失败
 - (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager;
@@ -162,9 +165,9 @@ Q11作为GATT server端，通过特定的SERVICE UUID: ```0000ff10-0000-1000-800
 
 ## 贡献
 
-如果有新的需求，请提交 [issue](https://github.com/guofengld/VIBLEManager/issues)
+如果有新的需求，请提交 [issue](https://github.com/viroyalnj/VIBLEManager/issues)
 
-欢迎 [pr](https://github.com/guofengld/VIBLEManager/pulls)
+欢迎 [pr](https://github.com/viroyalnj/VIBLEManager/pulls)
 
 ## License
 

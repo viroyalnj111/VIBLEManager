@@ -44,8 +44,6 @@ typedef enum : NSUInteger {
 
 @property (nonatomic, strong) CBCentralManager  *centralManager;
 @property (nonatomic, strong) NSMutableArray    *peripherals;
-@property (nonatomic, assign) BOOL              connected;
-@property (nonatomic, copy)   NSString          *deviceName;
 
 @property (nonatomic, strong) CBPeripheral      *peripheral;
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
@@ -88,18 +86,23 @@ typedef enum : NSUInteger {
     return self;
 }
 
+- (BOOL)connected {
+    return self.centralManager.state == CBManagerStatePoweredOn && self.peripheral && self.characteristic;
+}
+
+- (NSString *)deviceName {
+    return self.connected?self.peripheral.name:nil;
+}
+
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     if ([keyPath isEqualToString:@"isScanning"]) {
-        self.connected = NO;
-        self.deviceName = nil;
-        
         [self.delegate bleManager:self scaningDidChange:self.centralManager.isScanning];
     }
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)noti {
     CBCentralManager *centralManager = self.centralManager;
-    if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning) {
+    if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning && !self.connected) {
         [centralManager scanForPeripheralsWithServices:nil
                                                options:nil];
     }
@@ -177,6 +180,9 @@ typedef enum : NSUInteger {
             break;
     }
     
+    // 硬件电源状态改变，连接全部失效
+    self.peripheral = nil;
+    
     [self.delegate bleManager:self stateDidChange:central.state];
 }
 
@@ -206,6 +212,8 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"BLE didConnectPeripheral: %@", peripheral.name);
     
+    self.peripheral = peripheral;
+    
     peripheral.delegate = self;
     [peripheral discoverServices:nil];
 }
@@ -213,8 +221,6 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     NSLog(@"BLE didDisconnectPeripheral: %@", peripheral.name);
     
-    self.connected = NO;
-    self.deviceName = nil;
     self.peripherals = nil;
     
     [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
@@ -237,12 +243,10 @@ typedef enum : NSUInteger {
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
     for (CBCharacteristic *item in service.characteristics) {
-        NSLog(@"BLE didDiscoverCharacteristic: %@", item.UUID);
         if (item.properties & CBCharacteristicPropertyWrite || item.properties & CBCharacteristicPropertyWriteWithoutResponse) {
             // 这时候就认为是连接上了，不做其它判断
-            self.connected = YES;
-            self.deviceName = peripheral.name;
-            self.peripheral = peripheral;
+            NSLog(@"BLE characteristic: %@", item.UUID);
+            
             self.characteristic = item;
             self.arrCommand = [NSMutableArray new];
             
