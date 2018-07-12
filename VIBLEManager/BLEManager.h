@@ -28,8 +28,8 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 // 设备连接成功
 - (void)bleManager:(BLEManager *)manager didConnectedToDevice:(NSString *)name;
 
-// 蓝牙扫描失败
-- (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager;
+// 设备连接失败
+- (void)bleManager:(BLEManager *)manager didFailedConnectingToDevice:(NSString *)name;
 
 // 蓝牙设备断开连接
 - (void)bleManager:(BLEManager *)manager deviceDidDisconnected:(NSString *)name;
@@ -43,8 +43,12 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 
 @property (nonatomic, weak) id<BLEManagerDelegate>  delegate;
 
-@property (nonatomic, readonly) BOOL                connected;      // 连接状态
-@property (nonatomic, readonly) NSString            *deviceName;    // 设备名称
+@property (nonatomic, readonly) BOOL                scaning;            // 扫描中
+@property (nonatomic, readonly) BOOL                connecting;         // 连接中
+@property (nonatomic, readonly) BOOL                connected;          // 连接状态
+
+@property (nonatomic, readonly) NSString            *deviceName;        // BLE 设备名称
+@property (nonatomic, readonly) NSString            *currentRouteName;  // 为了获取蓝牙 Audio 设备名称
 
 + (instancetype)manager;
 

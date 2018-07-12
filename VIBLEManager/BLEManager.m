@@ -6,6 +6,7 @@
 //
 
 #import "BLEManager.h"
+#import <AVFoundation/AVFoundation.h>
 
 typedef enum : NSUInteger {
     BtCmdStateInit,         // 初始状态
@@ -48,6 +49,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) CBPeripheral      *peripheral;
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
 @property (nonatomic, strong) NSMutableArray    *arrCommand;
+@property (nonatomic, assign) BOOL              connecting;
 
 @end
 
@@ -69,7 +71,7 @@ typedef enum : NSUInteger {
         
         self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                    queue:nil
-                                                                 options:nil];
+                                                                 options:@{CBCentralManagerOptionShowPowerAlertKey: @YES}];
         
         [self.centralManager addObserver:self
                               forKeyPath:@"isScanning"
@@ -85,12 +87,22 @@ typedef enum : NSUInteger {
     return self;
 }
 
+- (BOOL)scaning {
+    return self.centralManager.isScanning;
+}
+
 - (BOOL)connected {
     return self.centralManager.state == CBManagerStatePoweredOn && self.peripheral && self.characteristic;
 }
 
 - (NSString *)deviceName {
     return self.connected?self.peripheral.name:nil;
+}
+
+- (NSString *)currentRouteName {
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    AVAudioSessionPortDescription *port = session.currentRoute.outputs.firstObject;
+    return port.portName;
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
@@ -101,10 +113,14 @@ typedef enum : NSUInteger {
 
 - (void)applicationDidBecomeActive:(NSNotification *)noti {
     CBCentralManager *centralManager = self.centralManager;
-    if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning && !self.connected) {
-        [centralManager scanForPeripheralsWithServices:nil
-                                               options:nil];
+    if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning && !self.connected && !self.connecting) {
+        [self startScan];
     }
+}
+
+- (void)startScan {
+    [self.centralManager scanForPeripheralsWithServices:nil
+                                                options:nil];
 }
 
 - (void)sendCommand:(NSString *)string withCompletion:(CommonBlock)completion {
@@ -171,11 +187,10 @@ typedef enum : NSUInteger {
 - (void)centralManagerDidUpdateState:(CBCentralManager *)central {
     switch (central.state) {
         case CBManagerStatePoweredOn:
-            [central scanForPeripheralsWithServices:nil options:nil];
+            [self startScan];
             break;
             
         default:
-            [central stopScan];
             break;
     }
     
@@ -188,14 +203,17 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSString *name = peripheral.name;
     
-    if ([name length] > 0 && [self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)] &&
-        [self.delegate bleManager:self shouldPairDeviceWithName:name]) {
+    if (!self.connected && [name length] > 0
+        && [self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)]
+        && [self.delegate bleManager:self shouldPairDeviceWithName:name]) {
         
         NSLog(@"BLE name: %@ advertisementData: %@", peripheral.name, advertisementData);
         [self.peripherals addObject:peripheral];
         
         // 连接之前，先终止扫描
         [central stopScan];
+        
+        self.connecting = YES;
         [central connectPeripheral:peripheral options:nil];
         
         [self.delegate bleManager:self startToConnectToDevice:peripheral.name];
@@ -203,13 +221,21 @@ typedef enum : NSUInteger {
 }
 
 - (void)centralManager:(CBCentralManager *)central didFailToConnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
-    [self.delegate bleManagerDeviceSearchDidFailed:self];
+    [self.delegate bleManager:self didFailedConnectingToDevice:peripheral.name];
+    self.connecting = NO;
     
-    [self.centralManager scanForPeripheralsWithServices:nil options:nil];
+    [self startScan];
 }
 
 - (void)centralManager:(CBCentralManager *)central didConnectPeripheral:(CBPeripheral *)peripheral {
     NSLog(@"BLE didConnectPeripheral: %@", peripheral.name);
+    
+    self.connecting = NO;
+    
+    if (self.peripheral) {
+        // 可能已经有连上的 BLE，此处断开，以避免多个连接
+        [self.centralManager cancelPeripheralConnection:self.peripheral];
+    }
     
     self.peripheral = peripheral;
     
@@ -220,11 +246,14 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDisconnectPeripheral:(CBPeripheral *)peripheral error:(NSError *)error {
     NSLog(@"BLE didDisconnectPeripheral: %@", peripheral.name);
     
-    self.peripherals = nil;
+    self.connecting = NO;
+    if (self.peripheral == peripheral) {
+        self.peripherals = nil;
+        
+        [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
+    }
     
-    [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
-    
-    [self.centralManager scanForPeripheralsWithServices:nil options:nil];
+    [self startScan];
 }
 
 #pragma mark - CBPeripheralDelegate

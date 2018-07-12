@@ -5,6 +5,7 @@ use_frameworks!
 target 'VIBLEManager_Example' do
   pod 'Masonry'
   pod 'VIBLEManager', :path => '../'
+  pod 'GFCocoaTools',             :git => 'https://github.com/guofengld/GFCocoaTools.git'
 
   target 'VIBLEManager_Tests' do
     inherit! :search_paths

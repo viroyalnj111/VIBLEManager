@@ -22,6 +22,7 @@
 		6003F5BC195388D20070C39A /* Tests.m in Sources */ = {isa = PBXBuildFile; fileRef = 6003F5BB195388D20070C39A /* Tests.m */; };
 		68FC94020071A42BCDF07EF8 /* Pods_VIBLEManager_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 10937215092BF970F1903C64 /* Pods_VIBLEManager_Tests.framework */; };
 		71719F9F1E33DC2100824A3D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */; };
+		AEA1EAED20F705DF008D64E4 /* FeiyuDeviceBtn.m in Sources */ = {isa = PBXBuildFile; fileRef = AEA1EAEB20F705DE008D64E4 /* FeiyuDeviceBtn.m */; };
 		C02F3D2E6DFA562CC4C68DDE /* Pods_VIBLEManager_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 465FDED49B1019CB10AF0202 /* Pods_VIBLEManager_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -64,6 +65,8 @@
 		93F487D7B7E4F05FF3872F25 /* Pods-VIBLEManager_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VIBLEManager_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-VIBLEManager_Example/Pods-VIBLEManager_Example.release.xcconfig"; sourceTree = "<group>"; };
 		9829D7523AF0B17A1BE20D23 /* VIBLEManager.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = VIBLEManager.podspec; path = ../VIBLEManager.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		ABDDD0D87011FE910934C2B1 /* Pods-VIBLEManager_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VIBLEManager_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-VIBLEManager_Tests/Pods-VIBLEManager_Tests.release.xcconfig"; sourceTree = "<group>"; };
+		AEA1EAEB20F705DE008D64E4 /* FeiyuDeviceBtn.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FeiyuDeviceBtn.m; sourceTree = "<group>"; };
+		AEA1EAEC20F705DF008D64E4 /* FeiyuDeviceBtn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FeiyuDeviceBtn.h; sourceTree = "<group>"; };
 		D8A7C5630970C68A2B8D1FA3 /* Pods-VIBLEManager_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VIBLEManager_Example.debug.xcconfig"; path = "Pods/Target Support Files/Pods-VIBLEManager_Example/Pods-VIBLEManager_Example.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -132,6 +135,8 @@
 			children = (
 				6003F59C195388D20070C39A /* AppDelegate.h */,
 				6003F59D195388D20070C39A /* AppDelegate.m */,
+				AEA1EAEC20F705DF008D64E4 /* FeiyuDeviceBtn.h */,
+				AEA1EAEB20F705DE008D64E4 /* FeiyuDeviceBtn.m */,
 				6003F5A5195388D20070C39A /* ViewController.h */,
 				6003F5A6195388D20070C39A /* ViewController.m */,
 				71719F9D1E33DC2100824A3D /* LaunchScreen.storyboard */,
@@ -336,12 +341,22 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-VIBLEManager_Example/Pods-VIBLEManager_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/AFNetworking/AFNetworking.framework",
+				"${BUILT_PRODUCTS_DIR}/GFCocoaTools/GFCocoaTools.framework",
+				"${BUILT_PRODUCTS_DIR}/MBProgressHUD/MBProgressHUD.framework",
 				"${BUILT_PRODUCTS_DIR}/Masonry/Masonry.framework",
+				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
+				"${BUILT_PRODUCTS_DIR}/SSZipArchive/SSZipArchive.framework",
 				"${BUILT_PRODUCTS_DIR}/VIBLEManager/VIBLEManager.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AFNetworking.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GFCocoaTools.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MBProgressHUD.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Masonry.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SSZipArchive.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/VIBLEManager.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -357,6 +372,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6003F59E195388D20070C39A /* AppDelegate.m in Sources */,
+				AEA1EAED20F705DF008D64E4 /* FeiyuDeviceBtn.m in Sources */,
 				6003F5A7195388D20070C39A /* ViewController.m in Sources */,
 				6003F59A195388D20070C39A /* main.m in Sources */,
 			);

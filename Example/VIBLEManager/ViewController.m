@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import <VIBLEManager/BLEManager.h>
 #import <Masonry/Masonry.h>
+#import "FeiyuDeviceBtn.h"
 
 @interface LogCell : UITableViewCell
 
@@ -40,6 +41,7 @@
 
 @property (nonatomic, strong) UITableView       *tableView;
 @property (nonatomic, strong) NSMutableArray    *logData;
+@property (nonatomic, strong) FeiyuDeviceBtn    *deviceBtn;
 
 @end
 
@@ -93,9 +95,15 @@
     [super viewDidLoad];
     self.title = @"指令调试";
     
+    self.deviceBtn = [FeiyuDeviceBtn buttonWithType:UIButtonTypeCustom];
+    self.deviceBtn.frame = CGRectMake(0, 0, 48, 48);
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:self.deviceBtn];
+    
     self.logData = [NSMutableArray new];
     
     [BLEManager manager].delegate = self;
+    
+    NSLog(@"currentRouteName: %@", [BLEManager manager].currentRouteName);
 }
 
 - (void)bleSetFM {
@@ -127,6 +135,8 @@
 }
 
 - (void)logMessage:(NSString *)msg {
+    NSLog(@"%@", msg);
+    
     [self.logData addObject:msg];
     
     NSInteger row = [self.tableView numberOfRowsInSection:0];
@@ -150,21 +160,19 @@
 - (void)bleManager:(BLEManager *)manager stateDidChange:(CBManagerState)state {
     switch (state) {
             case CBManagerStatePoweredOn: {
+                self.deviceBtn.status = manager.scaning?DeviceBtnScaning:DeviceBtnNormal;
                 [self logMessage:@"蓝牙上电"];
             }
             break;
             
             case CBManagerStatePoweredOff: {
+                self.deviceBtn.status = DeviceBtnPowerOff;
                 [self logMessage:@"蓝牙关机"];
             }
             break;
             
-            case CBManagerStateUnsupported: {
-                [self logMessage:@"蓝牙硬件不支持"];
-            }
-            break;
-            
         default: {
+            self.deviceBtn.status = DeviceBtnPowerOff;
             [self logMessage:[NSString stringWithFormat:@"BLE stateDidChange: %ld", (long)state]];
         }
             break;
@@ -172,6 +180,19 @@
 }
 
 - (void)bleManager:(BLEManager *)manager scaningDidChange:(BOOL)scaning {
+    if (scaning) {
+        self.deviceBtn.status = DeviceBtnScaning;
+    }
+    else {
+        self.deviceBtn.status = DeviceBtnNormal;
+        if (manager.connected) {
+            self.deviceBtn.status = DeviceBtnConnedted;
+        }
+        else {
+            self.deviceBtn.status = DeviceBtnNormal;
+        }
+    }
+    
     [self logMessage:scaning?@"开始扫描设备":@"停止扫描设备"];
 }
 
@@ -185,18 +206,26 @@
 }
 
 - (void)bleManager:(BLEManager *)manager startToConnectToDevice:(NSString *)name {
+    self.deviceBtn.status = DeviceBtnConnecting;
+    
     [self logMessage:[NSString stringWithFormat:@"开始连接设备 %@", name]];
 }
 
 - (void)bleManager:(BLEManager *)manager didConnectedToDevice:(NSString *)name {
+    self.deviceBtn.status = DeviceBtnConnedted;
+    
     [self logMessage:[NSString stringWithFormat:@"设备 %@ 连接成功", name]];
 }
 
-- (void)bleManagerDeviceSearchDidFailed:(BLEManager *)manager {
-    [self logMessage:@"扫描失败"];
+- (void)bleManager:(BLEManager *)manager didFailedConnectingToDevice:(NSString *)name {
+    self.deviceBtn.status = DeviceBtnNormal;
+    
+    [self logMessage:[NSString stringWithFormat:@"设备 %@ 连接失败", name]];
 }
 
 - (void)bleManager:(BLEManager *)manager deviceDidDisconnected:(NSString *)name {
+    self.deviceBtn.status = DeviceBtnNormal;
+    
     [self logMessage:@"设备断开连接"];
 }
 
