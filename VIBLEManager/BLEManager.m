@@ -20,6 +20,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, copy) NSString        *cmdString;
 @property (nonatomic, assign) BtCmdState    state;
 @property (nonatomic, copy) CommonBlock     completion;
+@property (nonatomic, copy) NSDate          *date;
 
 @end
 
@@ -51,6 +52,8 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) NSMutableArray    *arrCommand;
 @property (nonatomic, assign) BOOL              connecting;
 
+@property (nonatomic, copy)   NSUUID            *serviceID;
+
 @end
 
 @implementation BLEManager
@@ -68,6 +71,7 @@ typedef enum : NSUInteger {
 - (instancetype)init {
     if (self = [super init]) {
         self.peripherals = [NSMutableArray new];
+        self.serviceID = @"FF10";
         
         self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                    queue:nil
@@ -81,6 +85,11 @@ typedef enum : NSUInteger {
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(applicationDidBecomeActive:)
                                                      name:UIApplicationDidBecomeActiveNotification
+                                                   object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(applicationDidEnterBackground:)
+                                                     name:UIApplicationDidEnterBackgroundNotification
                                                    object:nil];
     }
     
@@ -107,15 +116,41 @@ typedef enum : NSUInteger {
 
 - (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context {
     if ([keyPath isEqualToString:@"isScanning"]) {
-        [self.delegate bleManager:self scaningDidChange:self.centralManager.isScanning];
+        NSNumber *value = change[NSKeyValueChangeNewKey];
+        BOOL scaning = [value boolValue];
+        NSLog(@"BLE scaning: %@", scaning?@"ON":@"OFF");
+        [self.delegate bleManager:self scaningDidChange:scaning];
     }
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)noti {
     CBCentralManager *centralManager = self.centralManager;
+    if (!self.connected && self.serviceID) {
+        CBPeripheral *peripheral = [self.centralManager retrieveConnectedPeripheralsWithServices:@[self.serviceID]].firstObject;
+        if (peripheral) {
+            // 目前已经有连上的设备
+            CBService *service = peripheral.services.firstObject;
+            CBCharacteristic *characteristic = service.characteristics.firstObject;
+            if (service && characteristic) {
+                NSLog(@"BLE service: %@, characteristic: %@", service, characteristic.UUID);
+                
+                self.peripheral = peripheral;
+                self.characteristic = characteristic;
+                self.arrCommand = [NSMutableArray new];
+                
+                [peripheral setNotifyValue:YES forCharacteristic:characteristic];
+                [self.delegate bleManager:self didConnectedToDevice:peripheral.name];
+            }
+        }
+    }
+    
     if (centralManager.state == CBManagerStatePoweredOn && !centralManager.isScanning && !self.connected && !self.connecting) {
         [self startScan];
     }
+}
+
+- (void)applicationDidEnterBackground:(NSNotification *)noti {
+    [self.centralManager stopScan];
 }
 
 - (void)startScan {
@@ -144,11 +179,23 @@ typedef enum : NSUInteger {
         if (cmd.state == BtCmdStateInit) {
             [self sendString:cmd.cmdString];
             cmd.state = BtCmdStateSent;
+            cmd.date = [NSDate date];
         }
         else if (cmd.state == BtCmdStateFinished) {
             [self.arrCommand removeObjectAtIndex:0];
             
             [self nextCommand];
+        }
+        else {
+            if ([[NSDate date] timeIntervalSinceDate:cmd.date] > 3) {
+                // 超时指令，直接移除
+                [self.arrCommand removeObjectAtIndex:0];
+                if (cmd.completion) {
+                    cmd.completion(NO, nil);
+                }
+                
+                [self nextCommand];
+            }
         }
     }
 }
@@ -203,11 +250,12 @@ typedef enum : NSUInteger {
 - (void)centralManager:(CBCentralManager *)central didDiscoverPeripheral:(CBPeripheral *)peripheral advertisementData:(NSDictionary<NSString *,id> *)advertisementData RSSI:(NSNumber *)RSSI {
     NSString *name = peripheral.name;
     
-    if (!self.connected && [name length] > 0
+    if ([name length] > 0
+        && !self.connected
         && [self.delegate respondsToSelector:@selector(bleManager:shouldPairDeviceWithName:)]
         && [self.delegate bleManager:self shouldPairDeviceWithName:name]) {
         
-        NSLog(@"BLE name: %@ advertisementData: %@", peripheral.name, advertisementData);
+        NSLog(@"BLE didDiscoverPeripheral: %@", peripheral);
         [self.peripherals addObject:peripheral];
         
         // 连接之前，先终止扫描
@@ -248,7 +296,7 @@ typedef enum : NSUInteger {
     
     self.connecting = NO;
     if (self.peripheral == peripheral) {
-        self.peripherals = nil;
+        self.peripheral = nil;
         
         [self.delegate bleManager:self deviceDidDisconnected:peripheral.name];
     }
@@ -271,18 +319,18 @@ typedef enum : NSUInteger {
 
 - (void)peripheral:(CBPeripheral *)peripheral didDiscoverCharacteristicsForService:(CBService *)service error:(NSError *)error {
     for (CBCharacteristic *item in service.characteristics) {
-        if (item.properties & CBCharacteristicPropertyWrite || item.properties & CBCharacteristicPropertyWriteWithoutResponse) {
-            // 这时候就认为是连接上了，不做其它判断
-            NSLog(@"BLE characteristic: %@", item.UUID);
-            
-            self.characteristic = item;
-            self.arrCommand = [NSMutableArray new];
-            
-            [peripheral setNotifyValue:YES forCharacteristic:item];
-            [self.delegate bleManager:self didConnectedToDevice:peripheral.name];
-            
-            break;
-        }
+        // 这时候就认为是连接上了，不做其它判断
+        NSLog(@"BLE characteristic: %@", item.UUID);
+        
+        self.characteristic = item;
+        self.arrCommand = [NSMutableArray new];
+        
+        self.serviceID = service.UUID;
+        
+        [peripheral setNotifyValue:YES forCharacteristic:item];
+        [self.delegate bleManager:self didConnectedToDevice:peripheral.name];
+        
+        break;
     }
 }
 
