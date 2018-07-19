@@ -204,7 +204,7 @@ typedef enum : NSUInteger {
                 // 超时指令，直接移除
                 [self.arrCommand removeObjectAtIndex:0];
                 if (cmd.completion) {
-                    cmd.completion(NO, nil);
+                    cmd.completion(NO, @{@"error_msg" : @"蓝牙连接已断开"});
                 }
                 
                 [self nextCommand];
