@@ -6,7 +6,6 @@
 //
 
 #import "BLEManager.h"
-#import <AVFoundation/AVFoundation.h>
 
 typedef enum : NSUInteger {
     BtCmdStateInit,         // 初始状态
@@ -51,6 +50,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, strong) CBCharacteristic  *characteristic;
 @property (nonatomic, strong) NSMutableArray    *arrCommand;
 @property (nonatomic, assign) BOOL              connecting;
+@property (nonatomic, assign) BOOL              powerOn;
 
 @property (nonatomic, copy)   NSUUID            *serviceID;
 
@@ -75,7 +75,7 @@ typedef enum : NSUInteger {
         
         self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                    queue:nil
-                                                                 options:@{CBCentralManagerOptionShowPowerAlertKey: @YES}];
+                                                                 options:@{CBCentralManagerOptionShowPowerAlertKey: @NO}];
         
         [self.centralManager addObserver:self
                               forKeyPath:@"isScanning"
@@ -91,6 +91,11 @@ typedef enum : NSUInteger {
                                                  selector:@selector(applicationDidEnterBackground:)
                                                      name:UIApplicationDidEnterBackgroundNotification
                                                    object:nil];
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(audioSessionRouteChange:)
+                                                     name:AVAudioSessionRouteChangeNotification
+                                                   object:[AVAudioSession sharedInstance]];
     }
     
     return self;
@@ -151,6 +156,14 @@ typedef enum : NSUInteger {
 
 - (void)applicationDidEnterBackground:(NSNotification *)noti {
     [self.centralManager stopScan];
+}
+
+- (void)audioSessionRouteChange:(NSNotification *)noti {
+    AVAudioSessionRouteDescription *preRoute = noti.userInfo[AVAudioSessionRouteChangePreviousRouteKey];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate audioSessionChangeFrom:preRoute to:[AVAudioSession sharedInstance].currentRoute];
+    });
 }
 
 - (void)startScan {
@@ -240,6 +253,8 @@ typedef enum : NSUInteger {
         default:
             break;
     }
+    
+    self.powerOn = central.state == CBManagerStatePoweredOn;
     
     // 硬件电源状态改变，连接全部失效
     self.peripheral = nil;

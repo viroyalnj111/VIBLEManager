@@ -6,6 +6,7 @@
 //
 
 #import <CoreBluetooth/CoreBluetooth.h>
+#import <AVFoundation/AVFoundation.h>
 
 typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 
@@ -37,12 +38,16 @@ typedef void (^CommonBlock)(BOOL success, NSDictionary * _Nullable info);
 // 唤醒语音助手
 - (void)bleManagerDeviceDidWakeup:(BLEManager *)manager;
 
+// 音频通道切换
+- (void)audioSessionChangeFrom:(AVAudioSessionRouteDescription *)preRoute to:(AVAudioSessionRouteDescription *)currentRoute;
+
 @end
 
 @interface BLEManager : NSObject
 
 @property (nonatomic, weak) id<BLEManagerDelegate>  delegate;
 
+@property (nonatomic, readonly) BOOL                powerOn;
 @property (nonatomic, readonly) BOOL                scaning;            // 扫描中
 @property (nonatomic, readonly) BOOL                connecting;         // 连接中
 @property (nonatomic, readonly) BOOL                connected;          // 连接状态
