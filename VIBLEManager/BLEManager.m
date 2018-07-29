@@ -54,7 +54,7 @@ typedef enum : NSUInteger {
 @property (nonatomic, assign) BOOL              connecting;
 @property (nonatomic, assign) BOOL              powerOn;
 
-@property (nonatomic, copy)   NSUUID            *serviceID;
+@property (nonatomic, copy)   CBUUID            *serviceID;
 
 @end
 
@@ -73,7 +73,7 @@ typedef enum : NSUInteger {
 - (instancetype)init {
     if (self = [super init]) {
         self.peripherals = [NSMutableArray new];
-        self.serviceID = @"FF10";
+        self.serviceID = [CBUUID UUIDWithString:@"FF10"];
         
         self.centralManager = [[CBCentralManager alloc] initWithDelegate:self
                                                                    queue:nil
