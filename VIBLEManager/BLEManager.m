@@ -9,8 +9,10 @@
 
 typedef enum : NSUInteger {
     BtCmdStateInit,         // 初始状态
+    BtCmdStateSending,      // 发送中
     BtCmdStateSent,         // 已经发送
     BtCmdStateEcho,         // 收到回应
+    BtCmdStateFailed,       // 处理完毕
     BtCmdStateFinished      // 处理完毕
 } BtCmdState;
 
@@ -191,7 +193,7 @@ typedef enum : NSUInteger {
     if (cmd) {
         if (cmd.state == BtCmdStateInit) {
             [self sendString:cmd.cmdString];
-            cmd.state = BtCmdStateSent;
+            cmd.state = BtCmdStateSending;
             cmd.date = [NSDate date];
         }
         else if (cmd.state == BtCmdStateFinished) {
@@ -200,8 +202,8 @@ typedef enum : NSUInteger {
             [self nextCommand];
         }
         else {
-            if ([[NSDate date] timeIntervalSinceDate:cmd.date] > 3) {
-                // 超时指令，直接移除
+            if (cmd.state == BtCmdStateFailed || [[NSDate date] timeIntervalSinceDate:cmd.date] > 3) {
+                // 发送失败或者超时，直接移除
                 [self.arrCommand removeObjectAtIndex:0];
                 if (cmd.completion) {
                     cmd.completion(NO, @{@"error_msg" : @"蓝牙连接已断开"});
@@ -438,6 +440,21 @@ typedef enum : NSUInteger {
                       type:CBCharacteristicWriteWithResponse];
     
     [peripheral setNotifyValue:YES forCharacteristic:characteristic];
+}
+
+- (void)peripheral:(CBPeripheral *)peripheral didWriteValueForCharacteristic:(CBCharacteristic *)characteristic error:(NSError *)error {
+    BTCommand *cmd = self.arrCommand.firstObject;
+    if (cmd && cmd.state == BtCmdStateSending) {
+        if (!error) {
+            cmd.state = BtCmdStateSent;
+        }
+        else {
+            // 写入失败
+            cmd.state = BtCmdStateFailed;
+        }
+    }
+    
+    [self nextCommand];
 }
 
 @end
