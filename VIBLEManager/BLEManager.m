@@ -32,7 +32,7 @@ typedef enum : NSUInteger {
 }
 
 - (instancetype)initWithString:(NSString *)string completion:(CommonBlock)completion {
-    if (self = [super init]) {
+    if (self = [self init]) {
         self.cmdString = string;
         self.state = BtCmdStateInit;
         self.completion = completion;
